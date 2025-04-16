@@ -9,11 +9,6 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "income_tracker_icons/96.ico",
-      "sizes": "96x96",
-      "type": "image/x-icon"
-    },
-    {
       "src": "income_tracker_icons/128.ico",
       "sizes": "128x128",
       "type": "image/x-icon"
