@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Settings - Income Tracker</title>
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Bootstrap Icons -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <!-- Google Fonts - Poppins -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Add these lines in the head section of all HTML files -->
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#4a90e2" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="Tynamis" />
+    <link rel="apple-touch-icon" href="income_tracker_icons/512.ico" />
+    <style>
+      :root {
+        --theme-background: linear-gradient(135deg, #e0f4ff 0%, #ffe5f1 100%);
+        --theme-text: #2d3748;
+        --theme-card-bg: #ffffff;
+        --theme-shadow: rgba(0, 0, 0, 0.1);
+        --theme-icons: #4a90e2; /* Add this line */
+        --theme-body: #f8f9fa; /* Add this line */
+        --theme-background-size: 100% 100%;
+        --theme-animation: none;
+      }
+
+      * {
+        font-family: "Poppins", sans-serif;
+      }
+
+      .custom-nav {
+        background: var(--theme-background);
+        background-size: var(--theme-background-size);
+        animation: var(--theme-animation);
+        box-shadow: 0 2px 10px var(--theme-shadow);
+      }
+
+      .navbar-brand {
+        font-weight: 600;
+        color: var(--theme-text);
+      }
+
+      .settings-item {
+        padding: 1rem;
+        background: var(--theme-card-bg);
+        border-radius: 12px;
+        margin-bottom: 0.75rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s ease;
+        cursor: pointer;
+        color: var(--theme-text);
+      }
+
+      .settings-item:hover {
+        transform: translateX(4px);
+      }
+
+      .settings-icon {
+        width: 40px;
+        height: 40px;
+        background: var(--theme-background);
+        background-size: var(--theme-background-size);
+        animation: var(--theme-animation);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+      }
+
+      .settings-icon i {
+        color: var(--theme-icons);
+      }
+
+      .footer-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--theme-background);
+        background-size: var(--theme-background-size);
+        animation: var(--theme-animation);
+        padding: 12px 0;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+      }
+
+      .nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: var(--theme-text);
+        text-decoration: none;
+        font-size: 0.8rem;
+        font-weight: 500;
+      }
+
+      .nav-item i {
+        font-size: 1.5rem;
+        margin-bottom: 4px;
+      }
+
+      .nav-item.active {
+        color: var(--theme-icons);
+      }
+
+      body {
+        padding-bottom: 80px;
+        background-color: var(--theme-body);
+      }
+
+      .theme-option {
+        height: 60px;
+        border: 2px solid transparent;
+        border-radius: 10px;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+      }
+
+      .theme-option:hover {
+        transform: translateY(-2px);
+      }
+
+      .theme-name {
+        position: absolute;
+        bottom: 5px;
+        left: 10px;
+        font-size: 0.8rem;
+        color: white;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+      }
+
+      .light-theme .theme-name {
+        color: var(--theme-text);
+        text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+      }
+
+      .btn-check:checked + .theme-option {
+        border-color: var(--theme-icons);
+        box-shadow: 0 0 0 2px rgba(var(--theme-icons), 0.3);
+      }
+
+      .toggle-icon {
+        transition: transform 0.3s ease;
+      }
+
+      [aria-expanded="true"] .toggle-icon {
+        transform: rotate(180deg);
+      }
+
+      .collapse {
+        transition: all 0.3s ease;
+      }
+
+      /* Add these styles to handle dark/light specific cases */
+      [data-theme="dark"] .settings-icon {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      [data-theme="dark"] .chart-card {
+        background: var(--theme-card-bg);
+      }
+
+      [data-theme="dark"] .transaction-item {
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+
+      @keyframes waveGradient {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
+      .wave-theme {
+        background: linear-gradient(
+          45deg,
+          #ff6b6b,
+          /* red */ #ff7eb3,
+          /* pink */ #845ec2,
+          /* purple */ #4b7bec /* blue */
+        );
+        background-size: 300% 300%;
+        animation: waveGradient 15s ease infinite;
+      }
+
+      /* Add to your existing styles */
+      .modal-body h6 {
+        color: var(--theme-text);
+        font-weight: 600;
+      }
+
+      .modal-body p,
+      .modal-body ul {
+        color: var(--theme-text);
+        opacity: 0.8;
+      }
+
+      .modal-body .card {
+        background: var(--theme-card-bg);
+      }
+
+      .modal-body i {
+        font-size: 1.25rem;
+      }
+
+      .modal-body ul {
+        padding-left: 1.2rem;
+      }
+
+      .modal-body ul li {
+        margin-bottom: 0.5rem;
+      }
+
+      .modal-body ul li:last-child {
+        margin-bottom: 0;
+      }
+
+      .current-language .card {
+        background: var(--theme-card-bg);
+        transition: transform 0.2s ease;
+      }
+
+      .current-language .card:hover {
+        transform: translateY(-2px);
+      }
+
+      #languageModal .lg-modal-body {
+        color: var(--theme-text) !important;
+        background-color: var(--theme-body) !important;
+      }
+
+      #languageModal .btn {
+        padding: 0.8rem;
+        font-weight: 500;
+      }
+
+      .modal-header {
+        color: var(--theme-text) !important;
+        background-color: var(--theme-background) !important;
+        background-size: var(--theme-background-size) !important;
+        animation: var(--theme-animation) !important;
+      }
+
+      #languageModal .desc-text {
+        color: var(--theme-text) !important;
+        opacity: 0.6;
+      }
+
+      #languageModal .card {
+        background: var(--theme-card-bg);
+      }
+
+      #languageModal span,
+      #languageModal h5,
+      #languageModal h6,
+      #financialSettingsModal span,
+      .text-muted,
+      #financialSettingsModal .modal-header {
+        color: var(--theme-text) !important;
+      }
+
+      .modal-content {
+        background-color: var(--theme-card-bg);
+      }
+
+      .current-language .card {
+        background: var(--theme-card-bg);
+        border: 1px solid var(--theme-shadow);
+        transition: transform 0.2s ease;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar custom-nav">
+      <div class="container">
+        <a class="navbar-brand" href="#">Pengaturan</a>
+      </div>
+    </nav>
+
+    <!-- Settings List -->
+    <div class="container mt-4">
+      <!-- Financial Calculations -->
+      <div class="settings-item d-flex align-items-center">
+        <div class="settings-icon me-3">
+          <i class="bi bi-calculator"></i>
+        </div>
+        <div class="flex-grow-1">
+          <h6 class="mb-0">Perhitungan Finansial</h6>
+        </div>
+        <i class="bi bi-chevron-right"></i>
+      </div>
+
+      <!-- Display Settings -->
+      <div
+        class="settings-item d-flex align-items-center"
+        data-bs-toggle="collapse"
+        href="#displayOptions"
+        role="button"
+        aria-expanded="false"
+      >
+        <div class="settings-icon me-3">
+          <i class="bi bi-palette"></i>
+        </div>
+        <div class="flex-grow-1">
+          <h6 class="mb-0">Tampilan</h6>
+        </div>
+        <i class="bi bi-chevron-down toggle-icon"></i>
+      </div>
+
+      <!-- Add this right after the Display Settings item -->
+      <div class="collapse mt-2" id="displayOptions">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <h6 class="mb-3">Theme</h6>
+
+            <!-- Dark Themes -->
+            <p class="text-muted mb-2">Dark Mode</p>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <input
+                  type="radio"
+                  class="btn-check"
+                  name="theme"
+                  id="luxurious"
+                  value="luxurious"
+                />
+                <label
+                  class="btn w-100 theme-option dark-theme"
+                  for="luxurious"
+                  style="background: linear-gradient(135deg, #1a1a1a, #4a4a4a)"
+                >
+                  <span class="theme-name">Luxurious</span>
+                </label>
+              </div>
+              <div class="col-6">
+                <input
+                  type="radio"
+                  class="btn-check"
+                  name="theme"
+                  id="emperal"
+                  value="emperal"
+                />
+                <label
+                  class="btn w-100 theme-option dark-theme"
+                  for="emperal"
+                  style="background: linear-gradient(135deg, #2c1810, #5c3524)"
+                >
+                  <span class="theme-name">Emperal</span>
+                </label>
+              </div>
+              <div class="col-6">
+                <input
+                  type="radio"
+                  class="btn-check"
+                  name="theme"
+                  id="minimus"
+                  value="minimus"
+                />
+                <label
+                  class="btn w-100 theme-option dark-theme"
+                  for="minimus"
+                  style="background: linear-gradient(135deg, #232323, #454545)"
+                >
+                  <span class="theme-name">Minimus</span>
+                </label>
+              </div>
+              <div class="col-6">
+                <input
+                  type="radio"
+                  class="btn-check"
+                  name="theme"
+                  id="octopus"
+                  value="octopus"
+                />
+                <label
+                  class="btn w-100 theme-option dark-theme"
+                  for="octopus"
+                  style="background: linear-gradient(135deg, #1a1a2e, #16213e)"
+                >
+                  <span class="theme-name">Octopus</span>
+                </label>
+              </div>
+              <div class="col-12 mb-2">
+                <input
+                  type="radio"
+                  class="btn-check"
+                  name="theme"
+                  id="wave-gradient"
+                  value="wave-gradient"
+                />
+                <label
+                  class="btn w-100 theme-option dark-theme wave-theme"
+                  for="wave-gradient"
+                >
+                  <span
+                    class="theme-name"
+                    style="text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5)"
+                    >Wave Gradient</span
+                  >
+                </label>
+              </div>
+            </div>
+
+            <!-- Light Themes -->
+            <p class="text-muted mb-2">Light Mode</p>
+            <div class="row g-2">
+              <div class="col-12 mb-2">
+                <input
+                  type="radio"
+                  class="btn-check"
+                  name="theme"
+                  id="default-pastel"
+                  value="default-pastel"
+                />
+                <label
+                  class="btn w-100 theme-option light-theme"
+                  for="default-pastel"
+                  style="
+                    background: linear-gradient(
+                      135deg,
+                      #e0f4ff 0%,
+                      #ffe5f1 100%
+                    );
+                  "
+                >
+                  <span class="theme-name">Default Pastel</span>
+                  <span class="position-absolute top-0 end-0 mt-1 me-2">
+                    <small class="badge bg-primary">Default</small>
+                  </span>
+                </label>
+              </div>
+              <div class="col-6">
+                <input
+                  type="radio"
+                  class="btn-check"
+                  name="theme"
+                  id="matcha"
+                  value="matcha"
+                />
+                <label
+                  class="btn w-100 theme-option light-theme"
+                  for="matcha"
+                  style="background: linear-gradient(135deg, #e8f3d6, #fcffa6)"
+                >
+                  <span class="theme-name">Matcha</span>
+                </label>
+              </div>
+              <div class="col-6">
+                <input
+                  type="radio"
+                  class="btn-check"
+                  name="theme"
+                  id="choco"
+                  value="choco"
+                />
+                <label
+                  class="btn w-100 theme-option light-theme"
+                  for="choco"
+                  style="background: linear-gradient(135deg, #f5e6d3, #d4a276)"
+                >
+                  <span class="theme-name">Choco</span>
+                </label>
+              </div>
+              <div class="col-6">
+                <input
+                  type="radio"
+                  class="btn-check"
+                  name="theme"
+                  id="formal-blue"
+                  value="formal-blue"
+                />
+                <label
+                  class="btn w-100 theme-option light-theme"
+                  for="formal-blue"
+                  style="background: linear-gradient(135deg, #e0f4ff, #b3e5fc)"
+                >
+                  <span class="theme-name">Formal Blue</span>
+                </label>
+              </div>
+              <div class="col-6">
+                <input
+                  type="radio"
+                  class="btn-check"
+                  name="theme"
+                  id="golden-hour"
+                  value="golden-hour"
+                />
+                <label
+                  class="btn w-100 theme-option light-theme"
+                  for="golden-hour"
+                  style="background: linear-gradient(135deg, #ffd700, #ffa500)"
+                >
+                  <span class="theme-name">Golden Hour</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Language Settings -->
+      <div class="settings-item d-flex align-items-center">
+        <div class="settings-icon me-3">
+          <i class="bi bi-translate"></i>
+        </div>
+        <div class="flex-grow-1">
+          <h6 class="mb-0">Bahasa</h6>
+        </div>
+        <i class="bi bi-chevron-right"></i>
+      </div>
+
+      <!-- About App -->
+      <div class="settings-item d-flex align-items-center">
+        <div class="settings-icon me-3">
+          <i class="bi bi-info-circle"></i>
+        </div>
+        <div class="flex-grow-1">
+          <h6 class="mb-0">Tentang Aplikasi</h6>
+        </div>
+        <i class="bi bi-chevron-right"></i>
+      </div>
+
+      <!-- Resets -->
+      <div class="settings-item d-flex align-items-center">
+        <div class="settings-icon me-3">
+          <i class="bi bi-arrow-counterclockwise"></i>
+        </div>
+        <div class="flex-grow-1">
+          <h6 class="mb-0">Resets</h6>
+        </div>
+        <i class="bi bi-chevron-right"></i>
+      </div>
+    </div>
+
+    <!-- Footer Navigation -->
+    <div class="footer-nav">
+      <div class="container">
+        <div class="row g-0">
+          <div class="col-3">
+            <a href="index.html" class="nav-item text-center">
+              <i class="bi bi-wallet-fill"></i>
+              <span>Income</span>
+            </a>
+          </div>
+          <div class="col-3">
+            <a href="tren.html" class="nav-item text-center">
+              <i class="bi bi-graph-up-arrow"></i>
+              <span>Tren</span>
+            </a>
+          </div>
+          <div class="col-3">
+            <a href="wishlist.html" class="nav-item text-center">
+              <i class="bi bi-gift-fill"></i>
+              <span>Wishlist</span>
+            </a>
+          </div>
+          <div class="col-3">
+            <a href="#" class="nav-item active text-center">
+              <i class="bi bi-gear-fill"></i>
+              <span>Pengaturan</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add this before closing body tag -->
+    <div class="modal fade" id="resetModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border: none; border-radius: 15px">
+          <div class="modal-header" style="background: var(--theme-background)">
+            <h5 class="modal-title">Reset Options</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body p-4">
+            <div class="d-grid gap-3">
+              <!-- Reset All Data -->
+              <button class="btn btn-danger" id="resetAllData">
+                <div class="d-flex align-items-center justify-content-between">
+                  <span>Reset All Data</span>
+                  <i class="bi bi-trash3-fill"></i>
+                </div>
+                <small class="d-block text-start text-muted mt-1">
+                  Clear all data including income, transactions, and wishlist
+                </small>
+              </button>
+
+              <!-- Reset Income Data -->
+              <button class="btn btn-warning text-dark" id="resetIncomeData">
+                <div class="d-flex align-items-center justify-content-between">
+                  <span>Reset Income Data</span>
+                  <i class="bi bi-wallet"></i>
+                </div>
+                <small class="d-block text-start text-muted mt-1">
+                  Reset income and safety net settings only
+                </small>
+              </button>
+
+              <!-- Delete Histories -->
+              <button class="btn btn-info text-dark" id="deleteHistories">
+                <div class="d-flex align-items-center justify-content-between">
+                  <span>Delete Histories & Reset Traffic</span>
+                  <i class="bi bi-clock-history"></i>
+                </div>
+                <small class="d-block text-start text-muted mt-1">
+                  Clear transaction history and chart data
+                </small>
+              </button>
+
+              <!-- Delete Wishlists -->
+              <button class="btn btn-secondary" id="deleteWishlists">
+                <div class="d-flex align-items-center justify-content-between">
+                  <span>Delete All Wishlists</span>
+                  <i class="bi bi-gift"></i>
+                </div>
+                <small class="d-block text-start text-muted mt-1">
+                  Remove all items from wishlist
+                </small>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal fade" id="confirmResetModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border: none; border-radius: 15px">
+          <div class="modal-body p-4 text-center">
+            <i
+              class="bi bi-exclamation-triangle-fill text-warning fs-1 mb-3"
+            ></i>
+            <h5 class="mb-3">Are you sure?</h5>
+            <p id="confirmMessage" class="mb-4">
+              This action cannot be undone.
+            </p>
+            <div class="d-flex gap-2 justify-content-center">
+              <button class="btn btn-danger px-4" id="confirmResetBtn">
+                Yes, Reset
+              </button>
+              <button class="btn btn-secondary px-4" data-bs-dismiss="modal">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add before closing body tag -->
+    <div class="modal fade" id="aboutAppModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content" style="border: none; border-radius: 15px">
+          <div class="modal-header" style="background: var(--theme-background)">
+            <h5 class="modal-title">Tentang Aplikasi</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body p-4">
+            <!-- Company Info -->
+            <div class="mb-4">
+              <div class="d-flex align-items-center mb-3">
+                <i class="bi bi-building me-2 text-primary"></i>
+                <h6 class="mb-0">Developer</h6>
+              </div>
+              <p class="mb-0">Vector Company</p>
+            </div>
+
+            <!-- App Version -->
+            <div class="mb-4">
+              <div class="d-flex align-items-center mb-3">
+                <i class="bi bi-code-square me-2 text-success"></i>
+                <h6 class="mb-0">Versi</h6>
+              </div>
+              <p class="mb-0">Ov1 (Original Version 1)</p>
+            </div>
+
+            <!-- Development Date -->
+            <div class="mb-4">
+              <div class="d-flex align-items-center mb-3">
+                <i class="bi bi-calendar-check me-2 text-info"></i>
+                <h6 class="mb-0">Dikembangkan pada</h6>
+              </div>
+              <p class="mb-0">16 April, 2025</p>
+            </div>
+
+            <!-- Purpose -->
+            <div class="mb-4">
+              <div class="d-flex align-items-center mb-3">
+                <i class="bi bi-bullseye me-2 text-danger"></i>
+                <h6 class="mb-0">Tujuan</h6>
+              </div>
+              <p class="mb-0">
+                Aplikasi ini dikembangkan untuk membantu pengguna dalam:
+              </p>
+              <ul class="mt-2">
+                <li>Mengelola pendapatan dengan lebih efektif</li>
+                <li>Memantau pengeluaran secara teratur</li>
+                <li>Merencanakan pembelian masa depan</li>
+                <li>Mencapai target finansial</li>
+              </ul>
+            </div>
+
+            <!-- Privacy Policy -->
+            <div class="mb-4">
+              <div class="d-flex align-items-center mb-3">
+                <i class="bi bi-shield-lock me-2 text-warning"></i>
+                <h6 class="mb-0">Kebijakan Privasi</h6>
+              </div>
+              <div
+                class="card border-0 p-3"
+                style="background: var(--theme-body)"
+              >
+                <h6 class="mb-3">Penggunaan LocalStorage</h6>
+                <p class="small mb-2">
+                  Aplikasi ini menggunakan localStorage untuk:
+                </p>
+                <ul class="small mb-3">
+                  <li>Menyimpan data pengguna secara lokal</li>
+                  <li>Tidak memerlukan server eksternal</li>
+                  <li>Data tersimpan hanya di perangkat pengguna</li>
+                  <li>Tidak ada data yang dikirim ke pihak ketiga</li>
+                </ul>
+                <p class="small mb-0">Data yang disimpan mencakup:</p>
+                <ul class="small mb-0">
+                  <li>Pengaturan aplikasi</li>
+                  <li>Riwayat transaksi</li>
+                  <li>Daftar wishlist</li>
+                  <li>Preferensi tema</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Contact -->
+            <div class="mb-4">
+              <div class="d-flex align-items-center mb-3">
+                <i class="bi bi-envelope me-2 text-secondary"></i>
+                <h6 class="mb-0">Kontak</h6>
+              </div>
+              <p class="mb-2">Email: vectorcompany1210@gmail.com</p>
+              <p class="mb-0">Website: www.vectorcompany.com</p>
+            </div>
+
+            <!-- Copyright -->
+            <div>
+              <div class="d-flex align-items-center mb-3">
+                <i class="bi bi-c-circle text-secondary me-2"></i>
+                <h6 class="mb-0">Copyright</h6>
+              </div>
+              <p class="mb-0">© 2025 Vector Company. All rights reserved.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Language Settings Modal -->
+    <div class="modal fade" id="languageModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border: none; border-radius: 15px">
+          <div class="modal-header" style="background: var(--theme-background)">
+            <h5 class="modal-title">Bahasa</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="lg-modal-body p-4">
+            <div class="current-language mb-4">
+              <div class="d-flex align-items-center mb-3">
+                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                <h6 class="mb-0">Bahasa Saat Ini</h6>
+              </div>
+              <div class="card border-0 shadow-sm p-3">
+                <div class="d-flex align-items-center">
+                  <img
+                    src="https://flagcdn.com/48x36/id.png"
+                    alt="Indonesian Flag"
+                    style="width: 24px; height: auto; margin-right: 12px"
+                  />
+                  <span>Bahasa Indonesia</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="small desc-text mb-4">
+              Saat ini aplikasi hanya tersedia dalam Bahasa Indonesia. Kami
+              sedang mengembangkan dukungan untuk bahasa lainnya.
+            </div>
+
+            <div class="d-flex gap-2">
+              <button
+                class="btn flex-grow-1"
+                id="requestLanguageBtn"
+                style="
+                  background: var(--theme-income-btn);
+                  color: var(--theme-text);
+                "
+              >
+                <i class="bi bi-envelope me-2"></i>
+                Request Update
+              </button>
+              <button
+                class="btn flex-grow-1"
+                data-bs-dismiss="modal"
+                style="
+                  background: var(--theme-expense-btn);
+                  color: var(--theme-text);
+                "
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="settings.js"></script>
+    <!-- Add this before closing body tag in all HTML files -->
+    <script src="themeManager.js"></script>
+    <!-- Add before closing body tag in all HTML files -->
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then((registration) => {
+              console.log("ServiceWorker registration successful");
+            })
+            .catch((err) => {
+              console.log("ServiceWorker registration failed: ", err);
+            });
+        });
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link rel="icon" type="image/x-icon" href="income_tracker_icons/32.ico" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Income Tracker</title>
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Bootstrap Icons -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <!-- Google Fonts - Poppins -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Add these lines in the head section of all HTML files -->
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#4a90e2" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="Tynamis" />
+    <link rel="apple-touch-icon" href="income_tracker_icons/512.ico" />
+    <style>
+      :root {
+        --theme-background: linear-gradient(135deg, #e0f4ff 0%, #ffe5f1 100%);
+        --theme-text: #2d3748;
+        --theme-card-bg: #ffffff;
+        --theme-shadow: rgba(0, 0, 0, 0.1);
+        --theme-icons: #4a90e2;
+        --theme-body: #f8f9fa;
+        --theme-income-btn: #e0f4ff;
+        --theme-expense-btn: #ffe5f1;
+        --theme-success: #198754;
+        --theme-warning: #ffc107;
+        --theme-danger: #dc3545;
+        --theme-buy-btn-bg: var(--theme-income-btn);
+        --theme-buy-btn-text: var(--theme-text);
+        --theme-delete-btn-bg: var(--theme-expense-btn);
+        --theme-delete-btn-text: var (--theme-text);
+        --theme-background-size: 100% 100%;
+        --theme-animation: none;
+        --animation-duration: 0.5s;
+        --animation-timing: cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      @keyframes waveGradient {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
+      @keyframes countUp {
+        0% {
+          opacity: 0.2;
+          /* transform: translateY(10px) scale(0.95); */
+          filter: blur(2px);
+        }
+        50% {
+          opacity: 0.7;
+          /* transform: translateY(5px) scale(1); */
+          filter: blur(1px);
+        }
+        100% {
+          opacity: 1;
+          /* transform: translateY(0) scale(1); */
+          filter: blur(0);
+        }
+      }
+
+      @keyframes flashFade {
+        0% {
+          opacity: 0;
+          /* transform: scale(0.95); */
+        }
+        50% {
+          opacity: 1;
+          /* transform: scale(1.05); */
+        }
+        100% {
+          opacity: 1;
+          /* transform: scale(1); */
+        }
+      }
+
+      .animate-count-up {
+        animation: countUp 1s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+        will-change: transform, opacity, filter;
+      }
+
+      .animate-flash-fade {
+        animation: flashFade 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+        will-change: transform, opacity;
+      }
+
+      * {
+        font-family: "Poppins", sans-serif;
+      }
+
+      .custom-nav {
+        background: var(--theme-background);
+        background-size: var(--theme-background-size);
+        animation: var(--theme-animation);
+        box-shadow: 0 2px 10px var(--theme-shadow);
+      }
+
+      .quest {
+        color: var(--theme-icons);
+      }
+
+      .navbar-brand {
+        font-weight: 600;
+        color: var(--theme-text);
+      }
+
+      .help-icon {
+        width: 32px;
+        height: 32px;
+        background: var(--theme-text);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .help-icon:hover {
+        transform: scale(1.1) rotate(15deg);
+      }
+
+      .finance-card {
+        background: var(--theme-card-bg);
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        color: var(--theme-text);
+      }
+
+      .trans-card,
+      .wish-card {
+        background: var(--theme-card-bg);
+      }
+
+      h5,
+      p,
+      small {
+        color: var(--theme-text);
+      }
+
+      .finance-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+      }
+
+      .finance-item:last-child {
+        border-bottom: none;
+      }
+
+      .finance-icon {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        margin-right: 1rem;
+      }
+
+      .finance-text {
+        flex-grow: 1;
+      }
+
+      .finance-label {
+        color: var(--theme-text);
+        margin-bottom: 0.2rem;
+      }
+
+      .finance-amount {
+        color: var(--theme-text);
+        font-weight: 600;
+        margin: 0;
+        transition: all 0.3s ease;
+        will-change: transform, opacity;
+        backface-visibility: hidden;
+        transform: translateZ(0);
+      }
+
+      .footer-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--theme-background);
+        background-size: var(--theme-background-size);
+        animation: var(--theme-animation);
+        padding: 12px 0;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+      }
+
+      .nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: var(--theme-text);
+        text-decoration: none;
+        font-size: 0.8rem;
+        font-weight: 500;
+      }
+
+      .nav-item i {
+        font-size: 1.5rem;
+        margin-bottom: 4px;
+      }
+
+      .nav-item.active {
+        color: var(--theme-icons);
+      }
+
+      /* Add padding to prevent content from being hidden behind footer */
+      body {
+        padding-bottom: 80px;
+        background-color: var(--theme-body);
+      }
+
+      .category-label {
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        transition: all 0.2s ease;
+      }
+
+      .btn-check:checked + .category-label {
+        background: linear-gradient(
+          135deg,
+          #e0f4ff 0%,
+          #ffe5f1 100%
+        ) !important;
+        border-color: #4a90e2 !important;
+        transform: scale(0.95);
+      }
+
+      /* Add these styles to handle dark/light specific cases */
+      [data-theme="dark"] .settings-icon {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      [data-theme="dark"] .chart-card {
+        background: var(--theme-card-bg);
+      }
+
+      [data-theme="dark"] .transaction-item {
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+
+      /* Add to your existing styles */
+      .guide-section h6 {
+        color: var(--theme-text);
+        font-weight: 600;
+      }
+
+      .guide-section .card {
+        background: var(--theme-card-bg);
+        transition: transform 0.2s ease;
+      }
+
+      .guide-section .card:hover {
+        transform: translateY(-2px);
+      }
+
+      .modal-content {
+        background-color: var(--theme-body);
+      }
+
+      .modal-header {
+        border-bottom: none;
+        background: var(--theme-background);
+        background-size: var(--theme-background-size);
+        animation: var(--theme-animation);
+      }
+
+      .modal-header .modal-title {
+        color: var(--theme-text);
+        font-weight: 600;
+      }
+
+      .text-muted {
+        color: var(--theme-text) !important;
+        opacity: 0.6;
+      }
+
+      /* For settings cards/items with gradients */
+      .settings-icon {
+        background: var(--theme-background);
+        background-size: var(--theme-background-size);
+        animation: var(--theme-animation);
+      }
+
+      /* Welcome Modal Styles */
+      #welcomeModal .modal-content {
+        background: var(--theme-body);
+        border: none;
+      }
+
+      #welcomeModal .carousel-item {
+        background: var(--theme-card-bg);
+      }
+
+      #welcomeModal h2,
+      #welcomeModal h3,
+      #welcomeModal h4 {
+        color: var(--theme-text);
+        font-weight: 600;
+      }
+
+      #welcomeModal p {
+        color: var(--theme-text);
+        opacity: 0.8;
+      }
+
+      #welcomeModal .btn {
+        background: var(--theme-background);
+        color: var (--theme-text);
+        border: none;
+        padding: 10px 30px;
+        font-weight: 500;
+        transition: transform 0.2s ease;
+      }
+
+      #welcomeModal .btn:hover {
+        transform: translateY(-2px);
+      }
+
+      #welcomeModal .btn-success {
+        background: var(--theme-success);
+        color: white;
+      }
+
+      #welcomeModal img {
+        transition: transform 0.3s ease;
+      }
+
+      #welcomeModal .carousel-item.active img {
+        animation: bounceIn 0.6s ease;
+      }
+
+      @keyframes bounceIn {
+        0% {
+          opacity: 0;
+          transform: scale(0.3);
+        }
+        50% {
+          opacity: 0.9;
+          transform: scale(1.1);
+        }
+        80% {
+          opacity: 1;
+          transform: scale(0.89);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      .highlight {
+        position: relative;
+        z-index: 1050; /* Di atas overlay */
+        transform: scale(1.05);
+        transition: all 0.3s ease;
+        background: var(
+          --theme-card-bg
+        ); /* Memastikan background tetap terlihat */
+        box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.3),
+          0 0 20px rgba(0, 0, 0, 0.2); /* Menambahkan glow effect */
+      }
+
+      .shadow-elements {
+        transition: all 0.3s ease;
+      }
+
+      .shadow-elements.active {
+        filter: blur(2px);
+        opacity: 0.3; /* Menambahkan opacity untuk efek gelap */
+        pointer-events: none;
+      }
+
+      .guide-tooltip {
+        position: fixed;
+        background: var(--theme-card-bg);
+        padding: 1.5rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px var(--theme-shadow);
+        width: 280px;
+        max-width: calc(100vw - 32px);
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.3s ease;
+      }
+
+      .guide-tooltip.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .guide-tooltip-arrow {
+        position: absolute;
+        width: 0;
+        height: 0;
+        border-left: 10px solid transparent;
+        border-right: 10px solid transparent;
+      }
+
+      .guide-tooltip.arrow-top .guide-tooltip-arrow {
+        top: -10px;
+        border-bottom: 10px solid var(--theme-card-bg);
+      }
+
+      .guide-tooltip.arrow-bottom .guide-tooltip-arrow {
+        bottom: -10px;
+        border-top: 10px solid var(--theme-card-bg);
+      }
+
+      /* Start Guide Styles */
+      .guide-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.75); /* Background gelap */
+        z-index: 1040; /* Di bawah highlight tapi di atas konten normal */
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .guide-overlay.show {
+        opacity: 1;
+      }
+
+      .guide-highlight {
+        position: relative;
+        z-index: 1051;
+        transform: scale(1.1);
+        transition: all 0.3s ease;
+        box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.3);
+      }
+
+      .guide-tooltip {
+        position: absolute;
+        background: var(--theme-card-bg);
+        padding: 1.5rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px var(--theme-shadow);
+        width: 280px;
+        z-index: 1051;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.3s ease;
+      }
+
+      .guide-tooltip.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* .guide-tooltip::before {
+        content: "";
+        position: absolute;
+        top: -10px;
+        left: 20px;
+        border-left: 10px solid transparent;
+        border-right: 10px solid transparent;
+        border-bottom: 10px solid var(--theme-card-bg);
+      } */
+
+      .guide-btn {
+        background: var(--theme-background);
+        color: var(--theme-text);
+        border: none;
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-weight: 500;
+        transition: transform 0.2s ease;
+      }
+
+      .guide-btn:hover {
+        transform: translateY(-2px);
+      }
+
+      .shadowed {
+        filter: blur(2px);
+        pointer-events: none;
+        transition: all 0.3s ease;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar custom-nav">
+      <div class="container">
+        <a class="navbar-brand" href="#">Income Tracker</a>
+        <div class="help-icon">
+          <i class="bi bi-question-lg quest"></i>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container mt-4">
+      <div class="card finance-card shadow-elements">
+        <!-- Safety Net -->
+        <div class="finance-item">
+          <div class="finance-icon bg-success bg-opacity-10">
+            <i class="bi bi-shield-check fs-3 text-success"></i>
+          </div>
+          <div class="finance-text">
+            <div class="finance-label">Safety Net</div>
+            <h1 class="finance-amount">Rp 0</h1>
+          </div>
+        </div>
+
+        <!-- Savings -->
+        <div class="finance-item">
+          <div class="finance-icon bg-warning bg-opacity-10">
+            <i class="bi bi-piggy-bank fs-3 text-warning"></i>
+          </div>
+          <div class="finance-text">
+            <div class="finance-label">Savings</div>
+            <h4 class="finance-amount">Rp 0</h4>
+          </div>
+        </div>
+
+        <!-- Total Income -->
+        <div class="finance-item">
+          <div class="finance-icon bg-primary bg-opacity-10">
+            <i class="bi bi-wallet2 fs-3 text-primary"></i>
+          </div>
+          <div class="finance-text">
+            <div class="finance-label">Total Income</div>
+            <h4 class="finance-amount">Rp 0</h4>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Buttons -->
+      <div class="row g-3 mt-3">
+        <div class="col-6">
+          <button
+            class="btn w-100 py-3 fw-semibold"
+            style="
+              background: var(--theme-income-btn);
+              color: var(--theme-text);
+              border: none;
+              box-shadow: 0 4px 15px var(--theme-shadow);
+            "
+          >
+            <i class="bi bi-plus-circle me-2"></i>
+            Tambah Income
+          </button>
+        </div>
+        <div class="col-6">
+          <button
+            class="btn w-100 py-3 fw-semibold"
+            style="
+              background: var(--theme-expense-btn);
+              color: var(--theme-text);
+              border: none;
+              box-shadow: 0 4px 15px var(--theme-shadow);
+            "
+          >
+            <i class="bi bi-dash-circle me-2"></i>
+            Tambah Pengeluaran
+          </button>
+        </div>
+      </div>
+
+      <!-- Add this code after the buttons row, but before the closing container div -->
+      <div
+        class="card trans-card mt-4 p-3"
+        style="border: none; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1)"
+      >
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0">Riwayat Transaksi</h5>
+          <a
+            href="tren.html"
+            class="text-decoration-none"
+            style="color: var(--theme-text)"
+          >
+            Lihat Semua <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+
+        <!-- Transaction List -->
+        <div class="transaction-list shadow-elements">
+          <!-- your transaction list will dynamically appear here -->
+        </div>
+      </div>
+
+      <!-- Add after transaction history card -->
+      <hr class="my-4 opacity-25" />
+
+      <!-- Replace existing wishlist container with this -->
+      <div
+        class="card wish-card p-3 mt-4"
+        style="border: none; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1)"
+      >
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0">Wishlist</h5>
+          <a
+            href="wishlist.html"
+            class="text-decoration-none"
+            style="color: var(--theme-text)"
+          >
+            Lihat Semua <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+
+        <div class="row g-3 shadow-elements" id="indexWishlistGrid">
+          <!-- Dynamic wishlist items will be inserted here -->
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-nav">
+      <div class="container">
+        <div class="row g-0">
+          <div class="col-3">
+            <a href="#" class="nav-item active text-center">
+              <i class="bi bi-wallet-fill"></i>
+              <span>Income</span>
+            </a>
+          </div>
+          <div class="col-3">
+            <a href="tren.html" class="nav-item text-center">
+              <i class="bi bi-graph-up-arrow"></i>
+              <span>Tren</span>
+            </a>
+          </div>
+          <div class="col-3">
+            <a href="wishlist.html" class="nav-item text-center">
+              <i class="bi bi-gift-fill"></i>
+              <span>Wishlist</span>
+            </a>
+          </div>
+          <div class="col-3">
+            <a href="settings.html" class="nav-item text-center">
+              <i class="bi bi-gear-fill"></i>
+              <span>Pengaturan</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add these modals -->
+    <div class="modal fade" id="insufficientModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div
+          class="modal-content"
+          style="background: #ffe5f1; border: none; border-radius: 15px"
+        >
+          <div class="modal-body text-center p-4">
+            <i class="bi bi-exclamation-circle text-danger fs-1 mb-3"></i>
+            <h5>Total Income Anda Tidak Mencukupi</h5>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="useSavingsModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border: none; border-radius: 15px">
+          <div class="modal-body text-center p-4">
+            <i class="bi bi-exclamation-triangle text-warning fs-1 mb-3"></i>
+            <h5 class="mb-3">Income Anda Mencukupi</h5>
+            <p>
+              Tapi safety net Anda kurang. Anda yakin ingin memakan Savings?
+            </p>
+            <div class="d-flex gap-2 justify-content-center mt-3">
+              <button class="btn btn-danger px-4" id="useSavingsBtn">
+                Makan Income!
+              </button>
+              <button class="btn btn-secondary px-4" data-bs-dismiss="modal">
+                Batalkan!
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="confirmBuyModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border: none; border-radius: 15px">
+          <div class="modal-body text-center p-4">
+            <i class="bi bi-check-circle text-success fs-1 mb-3"></i>
+            <h5 class="mb-3">Selamat! Anda Bisa Membeli Wishlist Ini</h5>
+            <p>Yakin ingin beli?</p>
+            <div class="d-flex gap-2 justify-content-center mt-3">
+              <button class="btn btn-success px-4" id="confirmBuyBtn">
+                Beli Sekarang
+              </button>
+              <button class="btn btn-secondary px-4" data-bs-dismiss="modal">
+                Nanti Saja
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add this before closing body tag -->
+    <div class="modal fade" id="helpGuideModal" tabindex="-1">
+      <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+          <div class="modal-header" style="background: var(--theme-background)">
+            <h5 class="modal-title">Income Tracker Guide</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body p-4">
+            <!-- Income Section -->
+            <div class="guide-section mb-4">
+              <h6 class="d-flex align-items-center gap-2 mb-3">
+                <i class="bi bi-wallet2 text-primary"></i>
+                Income Management
+              </h6>
+              <div class="card border-0 shadow-sm p-3 mb-3">
+                <p class="mb-2"><strong>Safety Net (20%)</strong></p>
+                <p class="text-muted small">
+                  Secara otomatis disisihkan dari pendapatan Anda yang bisa Anda
+                  gunakan untuk belanja. Persentase dapat diatur di pengaturan.
+                </p>
+              </div>
+              <div class="card border-0 shadow-sm p-3 mb-3">
+                <p class="mb-2"><strong>Savings (80%)</strong></p>
+                <p class="text-muted small">
+                  Sisa saldo setelah pengurangan safety net. Simpan ini dan
+                  gunakan untuk pengeluaran yang direncanakan dan investasi
+                  efektif.
+                </p>
+              </div>
+              <div class="card border-0 shadow-sm p-3">
+                <p class="mb-2"><strong>Total Income</strong></p>
+                <p class="text-muted small">
+                  Total pendapatan Anda saat ini. Tambahkan pendapatan baru
+                  menggunakan tombol + di bawah.
+                </p>
+              </div>
+            </div>
+
+            <!-- Transaction Section -->
+            <div class="guide-section mb-4">
+              <h6 class="d-flex align-items-center gap-2 mb-3">
+                <i class="bi bi-arrow-left-right text-success"></i>
+                Transactions
+              </h6>
+              <div class="card border-0 shadow-sm p-3 mb-3">
+                <p class="mb-2"><strong>Adding Income</strong></p>
+                <p class="text-muted small">
+                  Gunakan tombol "Tambah Income" untuk menambah pendapatan baru.
+                  Ini akan otomatis didistribusikan antara Safety Net dan
+                  Savings.
+                </p>
+              </div>
+              <div class="card border-0 shadow-sm p-3">
+                <p class="mb-2"><strong>Adding Expenses</strong></p>
+                <p class="text-muted small">
+                  Gunakan "Tambah Pengeluaran" untuk mencatat pengeluaran. Pilih
+                  kategori untuk membantu melacak pola pengeluaran.
+                </p>
+              </div>
+            </div>
+
+            <!-- Wishlist Section -->
+            <div class="guide-section mb-4">
+              <h6 class="d-flex align-items-center gap-2 mb-3">
+                <i class="bi bi-gift text-danger"></i>
+                Wishlist Features
+              </h6>
+              <div class="card border-0 shadow-sm p-3">
+                <p class="mb-2"><strong>Status Indicators</strong></p>
+                <div class="d-flex flex-column gap-2">
+                  <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                    <span class="small text-muted"
+                      >Bisa dibeli sekarang (Safety Net utuh)</span
+                    >
+                  </div>
+                  <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                    <span class="small text-muted"
+                      >Bisa dibeli (akan menggunakan Savings)</span
+                    >
+                  </div>
+                  <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-x-circle-fill text-danger"></i>
+                    <span class="small text-muted">Belum mampu dibeli</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Settings Section -->
+            <div class="guide-section">
+              <h6 class="d-flex align-items-center gap-2 mb-3">
+                <i class="bi bi-gear text-secondary"></i>
+                Settings & Customization
+              </h6>
+              <div class="card border-0 shadow-sm p-3">
+                <p class="mb-2"><strong>Available Settings</strong></p>
+                <ul class="text-muted small mb-0">
+                  <li>Atur persentase Safety Net</li>
+                  <li>Pilih dari berbagai tema</li>
+                  <li>Kelola data dan reset</li>
+                  <li>Lihat informasi aplikasi</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Welcome Modal -->
+    <div
+      class="modal fade"
+      id="welcomeModal"
+      data-bs-backdrop="static"
+      tabindex="-1"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-fullscreen">
+        <div class="modal-content">
+          <div class="modal-body p-0">
+            <!-- Carousel -->
+            <div
+              id="welcomeCarousel"
+              class="carousel slide"
+              data-bs-touch="true"
+            >
+              <div class="carousel-inner">
+                <!-- Slide 1: Welcome -->
+                <div class="carousel-item active">
+                  <div
+                    class="d-flex flex-column align-items-center justify-content-center min-vh-100 p-4 text-center"
+                  >
+                    <img
+                      src="https://img.freepik.com/free-vector/saving-money-concept-illustration_114360-8029.jpg"
+                      alt="Welcome"
+                      class="img-fluid mb-4"
+                      style="max-width: 300px"
+                    />
+                    <h2 class="mb-3">Selamat Datang!</h2>
+                    <p class="mb-4">
+                      Mari mulai perjalanan menuju keuangan yang lebih baik
+                      bersama Income Tracker.
+                    </p>
+                    <button class="btn btn-primary px-4" onclick="nextSlide()">
+                      Lanjut
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Slide 2: Track Income -->
+                <div class="carousel-item">
+                  <div
+                    class="d-flex flex-column align-items-center justify-content-center min-vh-100 p-4 text-center"
+                  >
+                    <img
+                      src="https://img.freepik.com/free-vector/income-concept-illustration_114360-2420.jpg"
+                      alt="Track Income"
+                      class="img-fluid mb-4"
+                      style="max-width: 300px"
+                    />
+                    <h4 class="mb-3">Lacak Pendapatanmu</h4>
+                    <p class="mb-4">
+                      Catat dan pantau setiap pemasukan dengan mudah. Lihat
+                      pertumbuhan keuanganmu dari waktu ke waktu.
+                    </p>
+                    <button class="btn btn-primary px-4" onclick="nextSlide()">
+                      Lanjut
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Slide 3: Manage Expenses -->
+                <div class="carousel-item">
+                  <div
+                    class="d-flex flex-column align-items-center justify-content-center min-vh-100 p-4 text-center"
+                  >
+                    <img
+                      src="https://img.freepik.com/free-vector/expenses-concept-illustration_114360-5332.jpg"
+                      alt="Manage Expenses"
+                      class="img-fluid mb-4"
+                      style="max-width: 300px"
+                    />
+                    <h4 class="mb-3">Kelola Pengeluaran</h4>
+                    <p class="mb-4">
+                      Kategorikan pengeluaranmu dan tetap seimbang dengan safety
+                      net yang terjaga.
+                    </p>
+                    <button class="btn btn-primary px-4" onclick="nextSlide()">
+                      Lanjut
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Slide 4: Plan Wishlist -->
+                <div class="carousel-item">
+                  <div
+                    class="d-flex flex-column align-items-center justify-content-center min-vh-100 p-4 text-center"
+                  >
+                    <img
+                      src="https://img.freepik.com/free-vector/wishes-concept-illustration_114360-3900.jpg"
+                      alt="Plan Wishlist"
+                      class="img-fluid mb-4"
+                      style="max-width: 300px"
+                    />
+                    <h4 class="mb-3">Rencanakan Wishlist</h4>
+                    <p class="mb-4">
+                      Buat daftar keinginanmu dan pantau kapan kamu bisa
+                      mewujudkannya.
+                    </p>
+                    <button class="btn btn-primary px-4" onclick="nextSlide()">
+                      Lanjut
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Slide 5: Get Started -->
+                <div class="carousel-item">
+                  <div
+                    class="d-flex flex-column align-items-center justify-content-center min-vh-100 p-4 text-center"
+                  >
+                    <img
+                      src="https://img.freepik.com/free-vector/complete-concept-illustration_114360-5390.jpg"
+                      alt="Get Started"
+                      class="img-fluid mb-4"
+                      style="max-width: 300px"
+                    />
+                    <h3 class="mb-3">Ayo mulai atur keuanganmu!</h3>
+                    <p class="mb-4">
+                      Langkah pertama menuju kebebasan finansial dimulai dari
+                      sini.
+                    </p>
+                    <button
+                      class="btn btn-success px-4 py-2"
+                      onclick="startApp()"
+                    >
+                      Mulai Sekarang!
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="income.js"></script>
+    <!-- Add this before closing body tag, after income.js -->
+    <script src="indexWishlist.js"></script>
+    <!-- Add this before closing body tag in all HTML files -->
+    <script src="themeManager.js"></script>
+    <!-- Add before closing body tag in all HTML files -->
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then((registration) => {
+              console.log("ServiceWorker registration successful");
+            })
+            .catch((err) => {
+              console.log("ServiceWorker registration failed: ", err);
+            });
+        });
+      }
+    </script>
+  </body>
+</html>
