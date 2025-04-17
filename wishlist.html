@@ -1,8 +1,7 @@
 <!DOCTYPE html>
-<html translate="no" lang="en">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="google" content="notranslate">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Wishlist - Income Tracker</title>
     <!-- Bootstrap CSS -->
@@ -20,13 +19,14 @@
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-        <!-- Add these lines in the head section of all HTML files -->
+    <!-- Add these lines in the head section of all HTML files -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4a90e2">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="Tynamis">
-    <link rel="apple-touch-icon" href="income_tracker_icons/512.ico">
+    <link rel="apple-touch-icon" href="income_tracker_icons/512.png">
+    <link rel="icon" type="image/png" href="income_tracker_icons/win_icon.png">
     <style>
       :root {
         --theme-background: linear-gradient(135deg, #e0f4ff 0%, #ffe5f1 100%);
@@ -46,7 +46,7 @@
         --theme-buy-btn-bg: var(--theme-income-btn);
         --theme-buy-btn-text: var(--theme-text);
         --theme-delete-btn-bg: var(--theme-expense-btn);
-        --theme-delete-btn-text: var(--theme-text);
+        --theme-delete-btn-text: var (--theme-text);
         --theme-background-size: 100% 100%;
         --theme-animation: none;
       }
@@ -408,7 +408,7 @@
     <script src="wishlist.js"></script>
     <!-- Add before closing body tag, after other scripts -->
     <script src="themeManager.js"></script>
-        <!-- Add before closing body tag in all HTML files -->
+    <!-- Add before closing body tag in all HTML files -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
