@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html translate="no" lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="google" content="notranslate" />
     <title>Wishlist - Income Tracker</title>
     <!-- Bootstrap CSS -->
     <link
@@ -20,13 +21,17 @@
       rel="stylesheet"
     />
     <!-- Add these lines in the head section of all HTML files -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#4a90e2">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-title" content="Tynamis">
-    <link rel="apple-touch-icon" href="income_tracker_icons/512.png">
-    <link rel="icon" type="image/png" href="income_tracker_icons/win_icon.png">
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#4a90e2" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="Tynamis" />
+    <link rel="apple-touch-icon" href="income_tracker_icons/512.png" />
+    <link
+      rel="icon"
+      type="image/png"
+      href="income_tracker_icons/win_icon.png"
+    />
     <style>
       :root {
         --theme-background: linear-gradient(135deg, #e0f4ff 0%, #ffe5f1 100%);
@@ -410,17 +415,18 @@
     <script src="themeManager.js"></script>
     <!-- Add before closing body tag in all HTML files -->
     <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => {
-                        console.log('ServiceWorker registration successful');
-                    })
-                    .catch(err => {
-                        console.log('ServiceWorker registration failed: ', err);
-                    });
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then((registration) => {
+              console.log("ServiceWorker registration successful");
+            })
+            .catch((err) => {
+              console.log("ServiceWorker registration failed: ", err);
             });
-        }
+        });
+      }
     </script>
   </body>
 </html>
