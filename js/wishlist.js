@@ -56,10 +56,31 @@ document.addEventListener("DOMContentLoaded", () => {
                                 <input type="text" class="form-control" id="wishlistName" required>
                             </div>
 
-                            <!-- Thumbnail URL -->
+                            <!-- Image Input Section -->
                             <div class="mb-3">
-                                <label for="thumbnailUrl" class="form-label">URL Thumbnail</label>
-                                <input type="url" class="form-control" id="thumbnailUrl" required>
+                                <label class="form-label">Gambar Wishlist</label>
+                                <div class="d-flex gap-2 mb-2">
+                                    <button type="button" class="btn btn-outline-secondary flex-grow-1" id="urlInputBtn">
+                                        <i class="bi bi-link-45deg"></i> URL
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary flex-grow-1" id="fileInputBtn">
+                                        <i class="bi bi-image"></i> Gallery
+                                    </button>
+                                </div>
+                                <div id="urlInputSection">
+                                    <input type="url" class="form-control" id="thumbnailUrl" placeholder="Enter image URL">
+                                </div>
+                                <div id="fileInputSection" style="display: none;">
+                                    <div class="custom-file-input">
+                                        <input type="file" class="form-control" id="thumbnailFile" accept="image/*" style="display: none;">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="fileLabel" readonly placeholder="Gak ada file dipilih">
+                                            <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('thumbnailFile').click()">
+                                                Pilih File
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="mt-2" id="thumbnailPreview" style="display: none;">
                                     <img src="" alt="Preview" class="img-fluid rounded" style="max-height: 150px;">
                                 </div>
@@ -83,11 +104,20 @@ document.addEventListener("DOMContentLoaded", () => {
                                         (type) => `
                                         <div class="col-4">
                                             <input type="radio" class="btn-check" name="wishlistType" 
-                                                   id="${type.id}" value="${type.id}" required>
-                                            <label class="btn w-100 text-center p-2 category-label" 
+                                                   id="${type.id}" value="${
+                                          type.id
+                                        }" required>
+                                            <label class="btn w-100 text-center p-2 category-label position-relative" 
                                                    for="${type.id}"
                                                    style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                                 ${type.label}
+                                                ${
+                                                  type.id === "other"
+                                                    ? `<input type="text" class="form-control form-control-sm mt-1 custom-category" 
+                                                          id="customCategory" maxlength="20" placeholder="Custom category"
+                                                          style="display: none;">`
+                                                    : ""
+                                                }
                                             </label>
                                         </div>
                                     `
@@ -117,16 +147,38 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("addWishlistModal")
   );
   const wishlistForm = document.getElementById("wishlistForm");
+  const urlInputSection = document.getElementById("urlInputSection");
+  const fileInputSection = document.getElementById("fileInputSection");
+  const urlInputBtn = document.getElementById("urlInputBtn");
+  const fileInputBtn = document.getElementById("fileInputBtn");
   const thumbnailInput = document.getElementById("thumbnailUrl");
+  const thumbnailFile = document.getElementById("thumbnailFile");
+  const fileLabel = document.getElementById("fileLabel");
   const thumbnailPreview = document.getElementById("thumbnailPreview");
   const previewImage = thumbnailPreview.querySelector("img");
+  const customCategory = document.getElementById("customCategory");
 
   // Show modal when clicking add button
   addWishlistBtn.addEventListener("click", () => {
     wishlistModal.show();
   });
 
-  // Handle thumbnail preview
+  // Toggle between URL and file input
+  urlInputBtn.addEventListener("click", () => {
+    urlInputSection.style.display = "block";
+    fileInputSection.style.display = "none";
+    urlInputBtn.classList.add("active");
+    fileInputBtn.classList.remove("active");
+  });
+
+  fileInputBtn.addEventListener("click", () => {
+    urlInputSection.style.display = "none";
+    fileInputSection.style.display = "block";
+    fileInputBtn.classList.add("active");
+    urlInputBtn.classList.remove("active");
+  });
+
+  // Handle thumbnail preview for URL
   thumbnailInput.addEventListener("input", () => {
     const url = thumbnailInput.value;
     if (url) {
@@ -137,6 +189,36 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Handle thumbnail preview for file
+  thumbnailFile.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      fileLabel.value = file.name;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        previewImage.src = e.target.result;
+        thumbnailPreview.style.display = "block";
+      };
+      reader.readAsDataURL(file);
+    } else {
+      fileLabel.value = "Gak ada file dipilih";
+      thumbnailPreview.style.display = "none";
+    }
+  });
+
+  // Handle custom category visibility
+  document.querySelectorAll('input[name="wishlistType"]').forEach((input) => {
+    input.addEventListener("change", (e) => {
+      if (e.target.id === "other") {
+        customCategory.style.display = "block";
+        customCategory.required = true;
+      } else {
+        customCategory.style.display = "none";
+        customCategory.required = false;
+      }
+    });
+  });
+
   // Load existing wishlist items
   loadWishlistItems();
 
@@ -144,12 +226,33 @@ document.addEventListener("DOMContentLoaded", () => {
   wishlistForm.addEventListener("submit", (e) => {
     e.preventDefault();
 
+    // Get the thumbnail source
+    let thumbnailSource = "";
+    if (urlInputSection.style.display !== "none" && thumbnailInput.value) {
+      thumbnailSource = thumbnailInput.value;
+    } else if (
+      fileInputSection.style.display !== "none" &&
+      thumbnailFile.files[0]
+    ) {
+      thumbnailSource = previewImage.src; // This will be the base64 data URL
+    }
+
+    const selectedType = document.querySelector(
+      'input[name="wishlistType"]:checked'
+    );
+    const wishlistType = selectedType.value;
+    const wishlistLabel =
+      wishlistType === "other" && customCategory.value
+        ? customCategory.value
+        : wishlistTypes.find((type) => type.id === wishlistType).label;
+
     const wishlistData = {
-      id: Date.now(), // Add unique ID for each item
+      id: Date.now(),
       name: document.getElementById("wishlistName").value,
-      thumbnail: document.getElementById("thumbnailUrl").value,
+      thumbnail: thumbnailSource,
       price: parseFloat(document.getElementById("wishlistPrice").value),
-      type: document.querySelector('input[name="wishlistType"]:checked').value,
+      type: wishlistType,
+      customLabel: wishlistType === "other" ? customCategory.value : null,
       createdAt: new Date().toISOString(),
     };
 
@@ -165,6 +268,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Reset form and close modal
     wishlistForm.reset();
     thumbnailPreview.style.display = "none";
+    customCategory.style.display = "none";
     wishlistModal.hide();
 
     // Update index page if it's open
