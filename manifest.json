@@ -1,7 +1,7 @@
 {
   "name": "Tynamis - Income Tracker",
   "short_name": "Tynamis",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Track your income, expenses, and wishlist items efficiently",
   "start_url": "/index.html",
   "display": "standalone",
