@@ -1,5 +1,5 @@
-const CACHE_NAME = "tynamis-v2"; // Update cache name dengan versi baru
-const APP_VERSION = "2.0.0"; // Tambahkan versi aplikasi
+const CACHE_NAME = "tynamis-v3"; // Update cache name dengan versi baru
+const APP_VERSION = "3.0.0"; // Tambahkan versi aplikasi
 
 const urlsToCache = [
   "/",
