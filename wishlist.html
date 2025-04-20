@@ -428,5 +428,17 @@
         });
       }
     </script>
+
+    <!-- Add the script to update the displays -->
+    <script>
+      // Update displays when safety net changes
+      window.addEventListener("safetyNetUpdated", (e) => {
+        const safetyNetAmount = e.detail.safetyNet;
+        const safetyNetDisplay = document.getElementById("safetyNetAmount");
+        if (safetyNetDisplay) {
+          safetyNetDisplay.textContent = formatCurrency(safetyNetAmount);
+        }
+      });
+    </script>
   </body>
 </html>

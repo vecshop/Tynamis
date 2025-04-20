@@ -62,8 +62,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const totalIncomeDisplay = document.getElementById("totalIncomeDisplay");
   const safetyNetDisplay = document.getElementById("safetyNetDisplay");
 
-  // Initialize values from localStorage
-  const totalIncome = parseFloat(localStorage.getItem("totalIncome")) || 0;
+  // Variabel utama yang harus konsisten di semua file
+  let totalIncome = parseFloat(localStorage.getItem("totalIncome")) || 0;
+  let totalSafetyNet = parseFloat(localStorage.getItem("totalSafetyNet")) || 0;
+  let totalSavings = parseFloat(localStorage.getItem("totalSavings")) || 0;
   let safetyNetPercentage =
     parseFloat(localStorage.getItem("safetyNetPercentage")) || 20;
 
@@ -137,7 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
       resetModal.show();
     });
 
-  // Reset All Data
+  // Update reset functions
   document.getElementById("resetAllData").addEventListener("click", () => {
     showConfirmation(
       "This will delete all your data including income, transactions, and wishlist items.",
@@ -148,13 +150,15 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   });
 
-  // Reset Income Data
   document.getElementById("resetIncomeData").addEventListener("click", () => {
     showConfirmation(
       "This will reset your income and safety net settings.",
       () => {
         localStorage.removeItem("totalIncome");
+        localStorage.removeItem("totalSafetyNet");
+        localStorage.removeItem("totalSavings");
         localStorage.removeItem("safetyNetPercentage");
+        localStorage.removeItem("isManuallyAdjusted");
         window.location.reload();
       }
     );
@@ -313,6 +317,86 @@ document.addEventListener("DOMContentLoaded", () => {
     window.location.href =
       "mailto:vectorcompany1210@gmail.com?subject=Language%20Support%20Request&body=I%20would%20like%20to%20request%20additional%20language%20support%20for%20the%20Income%20Tracker%20app.";
   });
+
+  // Add this to the saveSettingsBtn click handler
+  const saveSettingsBtn = document.getElementById("saveSafetyNetSettings");
+  if (saveSettingsBtn) {
+    saveSettingsBtn.addEventListener("click", () => {
+      const newPercent = parseFloat(
+        document.getElementById("safetyNetPercent").value
+      );
+      if (!isNaN(newPercent) && newPercent >= 0 && newPercent <= 100) {
+        localStorage.setItem("safetyNetPercentage", newPercent.toString());
+
+        // Recalculate safety net
+        const totalIncome =
+          parseFloat(localStorage.getItem("totalIncome")) || 0;
+        const newSafetyNet = (totalIncome * newPercent) / 100;
+        localStorage.setItem("totalSafetyNet", newSafetyNet.toString());
+
+        // Dispatch the safety net update event
+        window.dispatchEvent(
+          new CustomEvent("safetyNetUpdated", {
+            detail: {
+              safetyNet: newSafetyNet,
+            },
+          })
+        );
+
+        bootstrap.Modal.getInstance(
+          document.getElementById("financialSettingsModal")
+        ).hide();
+      }
+    });
+  }
+
+  // Safely add event listener for safety net settings
+  const saveSafetyNetBtn = document.getElementById("saveSafetyNetSettings");
+  if (saveSafetyNetBtn) {
+    saveSafetyNetBtn.addEventListener("click", () => {
+      const newPercent = parseFloat(
+        document.getElementById("safetyNetPercent").value
+      );
+
+      if (!isNaN(newPercent) && newPercent >= 0 && newPercent <= 100) {
+        const totalIncome =
+          parseFloat(localStorage.getItem("totalIncome")) || 0;
+
+        // Hitung safety net baru
+        const newSafetyNet = (totalIncome * newPercent) / 100;
+
+        // Simpan ke localStorage
+        localStorage.setItem("safetyNetPercentage", newPercent.toString());
+        localStorage.setItem("totalSafetyNet", newSafetyNet.toString());
+        localStorage.setItem(
+          "totalSavings",
+          (totalIncome - newSafetyNet).toString()
+        );
+
+        // Dispatch event untuk update
+        window.dispatchEvent(
+          new CustomEvent("safetyNetUpdated", {
+            detail: {
+              safetyNet: newSafetyNet,
+            },
+          })
+        );
+
+        // Close modal
+        bootstrap.Modal.getInstance(
+          document.getElementById("financialSettingsModal")
+        ).hide();
+      }
+    });
+  }
+
+  // Remove duplicate event listener
+  // Delete or comment out this section:
+  /*
+  document.getElementById("saveSafetyNetSettings").addEventListener("click", () => {
+      // ... existing code ...
+  });
+  */
 });
 
 // In settings.js, modify the theme selection handler

@@ -28,6 +28,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Load wishlist items
   loadLatestWishlistItems();
+
+  // Add event listener for safety net updates
+  window.addEventListener("safetyNetUpdated", (e) => {
+    const { safetyNet, savings, income } = e.detail;
+
+    // Update all wishlist items' status
+    const wishlistItems = document.querySelectorAll("#indexWishlistGrid .card");
+    wishlistItems.forEach((item) => {
+      const price = parseFloat(item.dataset.price);
+      updateItemStatus(item, price, safetyNet, income);
+    });
+  });
+
+  // Listen for safety net updates
+  window.addEventListener("safetyNetUpdated", (e) => {
+    updateStatusIndicators();
+    updateSafetyNetDisplay();
+  });
+
+  // Initial update
+  updateStatusIndicators();
 });
 
 // Modify the loadLatestWishlistItems function
@@ -122,36 +143,60 @@ function loadLatestWishlistItems() {
 }
 
 function handlePurchase(item) {
+  // Get latest values from localStorage
   const totalIncome = parseFloat(localStorage.getItem("totalIncome")) || 0;
-  const safetyNetPercentage =
-    parseFloat(localStorage.getItem("safetyNetPercentage")) || 20;
-  const safetyNetAmount = (totalIncome * safetyNetPercentage) / 100;
+  const totalSafetyNet =
+    parseFloat(localStorage.getItem("totalSafetyNet")) || 0;
 
+  // Check first if total income is insufficient
   if (totalIncome < item.price) {
     insufficientModal.show();
     setTimeout(() => {
       insufficientModal.hide();
     }, 3000);
-  } else if (safetyNetAmount < item.price) {
+    return;
+  }
+
+  // If safety net is not enough but has income
+  if (totalSafetyNet < item.price) {
     useSavingsModal.show();
+
+    // Handle "Makan Income" button click
     document.getElementById("useSavingsBtn").onclick = () => {
       processPurchase(item);
       useSavingsModal.hide();
     };
-  } else {
-    confirmBuyModal.show();
-    document.getElementById("confirmBuyBtn").onclick = () => {
-      processPurchase(item);
-      confirmBuyModal.hide();
-    };
+    return;
   }
+
+  // If safety net is sufficient
+  confirmBuyModal.show();
+
+  // Handle "Beli Sekarang" button click
+  document.getElementById("confirmBuyBtn").onclick = () => {
+    processPurchase(item);
+    confirmBuyModal.hide();
+  };
 }
 
 function processPurchase(item) {
-  // Deduct from total income
+  // Get current values
   const totalIncome = parseFloat(localStorage.getItem("totalIncome")) || 0;
+  let currentSafetyNet =
+    parseFloat(localStorage.getItem("totalSafetyNet")) || 0;
+
+  // Calculate new values
   const newTotalIncome = totalIncome - item.price;
+  let newSafetyNet = currentSafetyNet;
+
+  // If using safety net
+  if (currentSafetyNet >= item.price) {
+    newSafetyNet = currentSafetyNet - item.price;
+  }
+
+  // Save new values
   localStorage.setItem("totalIncome", newTotalIncome.toString());
+  localStorage.setItem("totalSafetyNet", newSafetyNet.toString());
 
   // Add to transactions
   const transaction = {
@@ -167,24 +212,19 @@ function processPurchase(item) {
   localStorage.setItem("transactions", JSON.stringify(transactions));
 
   // Remove from wishlist
+  let wishlistItems = JSON.parse(localStorage.getItem("wishlistItems")) || [];
   wishlistItems = wishlistItems.filter((i) => i.id !== item.id);
   localStorage.setItem("wishlistItems", JSON.stringify(wishlistItems));
 
-  // Reload displays
+  // Update displays
   loadLatestWishlistItems();
-
-  // Update income display if possible
-  const incomeDisplay = document.querySelector(
-    ".finance-item:nth-child(3) .finance-amount"
+  window.dispatchEvent(
+    new CustomEvent("safetyNetUpdated", {
+      detail: {
+        safetyNet: newSafetyNet,
+      },
+    })
   );
-  if (incomeDisplay) {
-    incomeDisplay.textContent = `Rp ${newTotalIncome.toLocaleString("id-ID")}`;
-  }
-
-  // Update safety net and savings if the functions exist
-  if (typeof updateSafetyNetDisplay === "function") {
-    updateSafetyNetDisplay();
-  }
 }
 
 function deleteWishlistItem(id) {
@@ -196,27 +236,26 @@ function deleteWishlistItem(id) {
 // Add this function in both indexWishlist.js and wishlist.js
 function getPurchaseStatus(price) {
   const totalIncome = parseFloat(localStorage.getItem("totalIncome")) || 0;
-  const safetyNetPercentage =
-    parseFloat(localStorage.getItem("safetyNetPercentage")) || 20;
-  const safetyNetAmount = (totalIncome * safetyNetPercentage) / 100;
+  const totalSafetyNet =
+    parseFloat(localStorage.getItem("totalSafetyNet")) || 0;
 
   if (totalIncome < price) {
     return {
       icon: "bi-x-circle-fill",
       color: "text-danger",
-      tooltip: "Belum bisa dibeli",
+      tooltip: "Total Income tidak mencukupi",
     };
-  } else if (safetyNetAmount < price) {
+  } else if (totalSafetyNet < price) {
     return {
       icon: "bi-exclamation-triangle-fill",
       color: "text-warning",
-      tooltip: "Perlu memakan savings",
+      tooltip: "Safety Net tidak mencukupi",
     };
   } else {
     return {
       icon: "bi-check-circle-fill",
       color: "text-success",
-      tooltip: "Bisa dibeli sekarang",
+      tooltip: "Bisa dibeli dari Safety Net",
     };
   }
 }
@@ -224,27 +263,113 @@ function getPurchaseStatus(price) {
 // Add this to both files
 function updateStatusIndicators() {
   const wishlistItems = document.querySelectorAll("[data-id]");
+  const totalIncome = parseFloat(localStorage.getItem("totalIncome")) || 0;
+  const totalSafetyNet =
+    parseFloat(localStorage.getItem("totalSafetyNet")) || 0;
+
   wishlistItems.forEach((item) => {
     const priceElement = item.querySelector(".card-text");
     const price = parseFloat(priceElement.textContent.replace(/[^0-9]/g, ""));
-    const status = getPurchaseStatus(price);
-
     const statusIcon = item.querySelector('[data-bs-toggle="tooltip"]');
-    statusIcon.className = `bi ${status.icon} ${status.color}`;
-    statusIcon.setAttribute("title", status.tooltip);
 
-    // Reinitialize tooltip
-    const tooltip = bootstrap.Tooltip.getInstance(statusIcon);
-    if (tooltip) {
-      tooltip.dispose();
+    if (totalIncome < price) {
+      updateStatusIcon(statusIcon, "danger", "Total Income tidak mencukupi");
+    } else if (totalSafetyNet < price) {
+      updateStatusIcon(statusIcon, "warning", "Akan menggunakan Savings");
+    } else {
+      updateStatusIcon(statusIcon, "success", "Bisa dibeli dari Safety Net");
     }
-    new bootstrap.Tooltip(statusIcon);
   });
 }
 
 // Add storage event listener
 window.addEventListener("storage", (e) => {
   if (e.key === "totalIncome" || e.key === "safetyNetPercentage") {
+    updateStatusIndicators();
+  }
+});
+
+// Add this helper function
+function updatePurchaseStatus(itemElement, price) {
+  const currentSafetyNet =
+    parseFloat(localStorage.getItem("totalSafetyNet")) || 0;
+  const currentIncome = parseFloat(localStorage.getItem("totalIncome")) || 0;
+
+  const statusIcon = itemElement.querySelector(".status-icon");
+  const buyButton = itemElement.querySelector(".buy-button");
+
+  if (price <= currentSafetyNet) {
+    // Can buy with safety net
+    statusIcon.innerHTML =
+      '<i class="bi bi-check-circle-fill text-success"></i>';
+    buyButton.disabled = false;
+  } else if (price <= currentIncome) {
+    // Can buy but will use savings
+    statusIcon.innerHTML =
+      '<i class="bi bi-exclamation-triangle-fill text-warning"></i>';
+    buyButton.disabled = false;
+  } else {
+    // Cannot afford
+    statusIcon.innerHTML = '<i class="bi bi-x-circle-fill text-danger"></i>';
+    buyButton.disabled = true;
+  }
+}
+
+// Add helper function to update item status
+function updateItemStatus(itemElement, price, safetyNet, totalIncome) {
+  const statusIcon = itemElement.querySelector('[data-bs-toggle="tooltip"]');
+  const buyBtn = itemElement.querySelector(".buy-btn");
+
+  if (!statusIcon || !buyBtn) return;
+
+  if (totalIncome < price) {
+    // Can't afford
+    statusIcon.className = "bi bi-x-circle-fill text-danger";
+    statusIcon.setAttribute("title", "Total Income tidak mencukupi");
+    buyBtn.disabled = true;
+  } else if (safetyNet < price) {
+    // Can buy but will use savings
+    statusIcon.className = "bi bi-exclamation-triangle-fill text-warning";
+    statusIcon.setAttribute("title", "Akan menggunakan Savings");
+    buyBtn.disabled = false;
+  } else {
+    // Can buy with safety net
+    statusIcon.className = "bi bi-check-circle-fill text-success";
+    statusIcon.setAttribute("title", "Bisa dibeli dari Safety Net");
+    buyBtn.disabled = false;
+  }
+
+  // Reinitialize tooltip
+  const tooltip = bootstrap.Tooltip.getInstance(statusIcon);
+  if (tooltip) {
+    tooltip.dispose();
+  }
+  new bootstrap.Tooltip(statusIcon);
+}
+
+// Tambahkan fungsi ini sebelum updateStatusIndicators
+
+function updateStatusIcon(icon, status, tooltip) {
+  const statusClasses = {
+    danger: "bi-x-circle-fill text-danger",
+    warning: "bi-exclamation-triangle-fill text-warning",
+    success: "bi-check-circle-fill text-success",
+  };
+
+  icon.className = `bi ${statusClasses[status]}`;
+  icon.setAttribute("title", tooltip);
+
+  // Refresh tooltip
+  const tooltipInstance = bootstrap.Tooltip.getInstance(icon);
+  if (tooltipInstance) {
+    tooltipInstance.dispose();
+  }
+  new bootstrap.Tooltip(icon);
+}
+
+// Add storage event listener
+window.addEventListener("storage", (e) => {
+  if (e.key === "totalIncome" || e.key === "totalSafetyNet") {
     updateStatusIndicators();
   }
 });

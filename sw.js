@@ -1,4 +1,6 @@
-const CACHE_NAME = "tynamis-v1";
+const CACHE_NAME = "tynamis-v2"; // Update cache name dengan versi baru
+const APP_VERSION = "2.0.0"; // Tambahkan versi aplikasi
+
 const urlsToCache = [
   "/",
   "/index.html",
@@ -18,13 +20,15 @@ const urlsToCache = [
   "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js",
   "https://cdn.jsdelivr.net/npm/apexcharts",
   "/income_tracker_icons/512.png",
-  "/income_tracker_icons/win_icon.png"
+  "/income_tracker_icons/win_icon.png",
 ];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
   );
+  // Immediately activate new service worker
+  self.skipWaiting();
 });
 
 self.addEventListener("fetch", (event) => {
@@ -49,14 +53,26 @@ self.addEventListener("fetch", (event) => {
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    Promise.all([
+      // Delete old caches
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            if (cacheName !== CACHE_NAME) {
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      }),
+      // Tell clients about the update
+      self.clients.matchAll().then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage({
+            type: "APP_UPDATED",
+            version: APP_VERSION,
+          });
+        });
+      }),
+    ])
   );
 });

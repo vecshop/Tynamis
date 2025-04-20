@@ -3,8 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="google" content="notranslate">
-    <link rel="icon" type="image/png" href="income_tracker_icons/win_icon.png" />
+    <meta name="google" content="notranslate" />
+    <link
+      rel="icon"
+      type="image/png"
+      href="income_tracker_icons/win_icon.png"
+    />
     <title>Income Tracker</title>
     <!-- Bootstrap CSS -->
     <link
@@ -507,6 +511,66 @@
         pointer-events: none;
         transition: all 0.3s ease;
       }
+
+      /* Add in the existing <style> tag */
+      .modal {
+        z-index: 1050;
+      }
+
+      .modal-backdrop {
+        z-index: 1040;
+      }
+
+      .modal-backdrop.show {
+        opacity: 0.5;
+      }
+
+      /* Ensure second modal appears above first modal */
+      .modal.show ~ .modal-backdrop + .modal-backdrop {
+        z-index: 1060;
+      }
+
+      .modal.show ~ .modal {
+        z-index: 1070;
+      }
+
+      #safetyNetSettings {
+        transition: transform 0.3s ease;
+      }
+
+      #safetyNetSettings:hover {
+        transform: rotate(45deg);
+      }
+
+      /* Tambahkan di dalam tag <style> di index.html */
+      #updateModal .modal-content {
+        background: var(--theme-card-bg);
+      }
+
+      #updateModal .btn-primary {
+        background: var(--theme-background);
+        border: none;
+        color: var(--theme-text);
+      }
+
+      #updateModal .btn-secondary {
+        background: var(--theme-card-bg);
+        border: 1px solid var(--theme-shadow);
+        color: var(--theme-text);
+      }
+
+      #updateModal i {
+        animation: rotate 2s linear infinite;
+      }
+
+      @keyframes rotate {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
     </style>
   </head>
   <body>
@@ -530,6 +594,13 @@
             <div class="finance-label">Safety Net</div>
             <h1 class="finance-amount">Rp 0</h1>
           </div>
+          <!-- Add this new settings icon -->
+          <button class="btn p-0 ms-2" id="safetyNetSettings">
+            <i
+              class="bi bi-gear fs-5"
+              style="color: var(--theme-text); opacity: 0.7"
+            ></i>
+          </button>
         </div>
 
         <!-- Savings -->
@@ -716,6 +787,78 @@
               </button>
               <button class="btn btn-secondary px-4" data-bs-dismiss="modal">
                 Nanti Saja
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add after other modals -->
+    <div
+      class="modal fade"
+      id="noSafetyNetModal"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-1"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border: none; border-radius: 15px">
+          <div class="modal-body text-center p-4">
+            <i class="bi bi-exclamation-triangle text-warning fs-1 mb-3"></i>
+            <h5 class="mb-3">Safety Net Anda Sudah Habis</h5>
+            <p>Anda yakin ingin memakan Savings?</p>
+            <div class="d-flex gap-2 justify-content-center mt-3">
+              <button class="btn btn-danger px-4" id="eatSavingsBtn">
+                Makan Savings!
+              </button>
+              <button class="btn btn-secondary px-4" data-bs-dismiss="modal">
+                Batalkan!
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add this before closing body tag -->
+    <div class="modal fade" id="financialSettingsModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border: none; border-radius: 15px">
+          <div class="modal-header" style="background: var(--theme-background)">
+            <h5 class="modal-title">Pengaturan Keuangan</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body p-4">
+            <div class="mb-3">
+              <label for="safetyNetPercent" class="form-label"
+                >Persentase Safety Net</label
+              >
+              <div class="input-group">
+                <input
+                  type="number"
+                  class="form-control"
+                  id="safetyNetPercent"
+                  min="0"
+                  max="100"
+                  value="20"
+                />
+                <span class="input-group-text">%</span>
+              </div>
+              <small class="text-muted">Sisa akan masuk ke Savings</small>
+            </div>
+            <div class="d-grid">
+              <button
+                class="btn"
+                style="background: var(--theme-background)"
+                id="saveSafetyNetSettings"
+              >
+                Simpan Pengaturan
               </button>
             </div>
           </div>
@@ -996,6 +1139,126 @@
               console.log("ServiceWorker registration failed: ", err);
             });
         });
+      }
+    </script>
+    <!-- Tambahkan sebelum closing body tag -->
+    <script>
+      window.addEventListener("safetyNetUpdated", (e) => {
+        const safetyNetDisplay = document.querySelector(
+          ".finance-item:first-child .finance-amount"
+        );
+        if (safetyNetDisplay) {
+          animateValue(
+            safetyNetDisplay,
+            parseFloat(safetyNetDisplay.textContent.replace(/[^0-9]/g, "")),
+            e.detail.safetyNet
+          );
+        }
+      });
+    </script>
+
+    <!-- Add before closing body tag -->
+    <div
+      class="modal fade"
+      id="updateModal"
+      data-bs-backdrop="static"
+      tabindex="-1"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border: none; border-radius: 15px">
+          <div class="modal-header" style="background: var(--theme-background)">
+            <h5 class="modal-title">Update Tersedia</h5>
+          </div>
+          <div class="modal-body text-center p-4">
+            <i class="bi bi-arrow-clockwise text-primary fs-1 mb-3"></i>
+            <h5 class="mb-3">Versi Baru Tersedia</h5>
+            <p>Aplikasi perlu diperbarui untuk mendapatkan fitur terbaru.</p>
+            <div class="d-grid gap-2 mt-3">
+              <button class="btn btn-primary" id="updateNowBtn">
+                Update Sekarang
+              </button>
+              <button class="btn btn-secondary" id="updateLaterBtn">
+                Nanti Saja
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Tambahkan sebelum script service worker
+      const currentVersion = "2.0.0";
+
+      // Check untuk versi yang tersimpan
+      const savedVersion = localStorage.getItem("appVersion");
+
+      // Fungsi untuk menangani update
+      function handleUpdate() {
+        const updateModal = new bootstrap.Modal(
+          document.getElementById("updateModal")
+        );
+
+        // Event listener untuk tombol update
+        document.getElementById("updateNowBtn").onclick = () => {
+          // Clear cache dan reload
+          caches
+            .keys()
+            .then((keyList) => {
+              return Promise.all(
+                keyList.map((key) => {
+                  return caches.delete(key);
+                })
+              );
+            })
+            .then(() => {
+              localStorage.setItem("appVersion", currentVersion);
+              window.location.reload(true);
+            });
+        };
+
+        // Event listener untuk tombol nanti
+        document.getElementById("updateLaterBtn").onclick = () => {
+          updateModal.hide();
+        };
+
+        // Tampilkan modal jika versi berbeda
+        if (savedVersion && savedVersion !== currentVersion) {
+          updateModal.show();
+        }
+      }
+
+      // Listen untuk pesan dari service worker
+      navigator.serviceWorker.addEventListener("message", (event) => {
+        if (event.data.type === "APP_UPDATED") {
+          handleUpdate();
+        }
+      });
+
+      // Service worker registration
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then((registration) => {
+              console.log("ServiceWorker registration successful");
+
+              // Cek update saat pertama kali load
+              registration.addEventListener("activate", () => {
+                if (savedVersion && savedVersion !== currentVersion) {
+                  handleUpdate();
+                }
+              });
+            })
+            .catch((err) => {
+              console.log("ServiceWorker registration failed: ", err);
+            });
+        });
+      }
+
+      // Simpan versi saat pertama kali install
+      if (!savedVersion) {
+        localStorage.setItem("appVersion", currentVersion);
       }
     </script>
   </body>

@@ -1,12 +1,12 @@
-// Initialize totalIncome from localStorage or set to 0
+// Variabel utama yang harus konsisten di semua file
 let totalIncome = parseFloat(localStorage.getItem("totalIncome")) || 0;
+let totalSafetyNet = parseFloat(localStorage.getItem("totalSafetyNet")) || 0;
+let totalSavings = parseFloat(localStorage.getItem("totalSavings")) || 0;
+let safetyNetPercentage =
+  parseFloat(localStorage.getItem("safetyNetPercentage")) || 20;
 
 // Initialize transactions array from localStorage or empty array
 let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
-
-// Add at the top with other initializations
-let safetyNetPercentage =
-  parseFloat(localStorage.getItem("safetyNetPercentage")) || 20;
 
 // Add after other initializations
 let startGuide = {
@@ -34,6 +34,23 @@ const categories = [
   { id: "entertainment", icon: "bi-controller", title: "Entertainment" },
   { id: "other", icon: "bi-three-dots", title: "Lainnya" },
 ];
+
+// Tambahkan fungsi ini di bagian atas file
+function calculateSafetyNet() {
+    const totalIncome = parseFloat(localStorage.getItem("totalIncome")) || 0;
+    const safetyNetPercentage = parseFloat(localStorage.getItem("safetyNetPercentage")) || 20;
+    return (totalIncome * safetyNetPercentage) / 100;
+}
+
+function updateAllSafetyNetDisplays() {
+    const safetyNet = parseFloat(localStorage.getItem("totalSafetyNet")) || 0;
+    const displays = document.querySelectorAll('.finance-item:first-child .finance-amount');
+    displays.forEach(display => {
+        if (display) {
+            animateValue(display, parseFloat(display.textContent.replace(/[^0-9]/g, '')), safetyNet);
+        }
+    });
+}
 
 // Add this function at the beginning after initializations
 function loadTransactionHistory() {
@@ -75,41 +92,6 @@ function loadTransactionHistory() {
     }
   });
 }
-
-// Modify the Welcome Modal Logic section
-document.addEventListener("DOMContentLoaded", () => {
-  // Check if it's first visit
-  const hasVisited = localStorage.getItem("hasVisited");
-
-  if (!hasVisited) {
-    // Add shadow-elements class to all major components
-    const elementsToShadow = document.querySelectorAll(
-      ".finance-card, .transaction-list, #indexWishlistGrid"
-    );
-    elementsToShadow.forEach((el) => el.classList.add("shadow-elements"));
-
-    // Show welcome modal
-    const welcomeModal = new bootstrap.Modal(
-      document.getElementById("welcomeModal")
-    );
-    welcomeModal.show();
-
-    // Initialize carousel
-    const welcomeCarousel = new bootstrap.Carousel(
-      document.getElementById("welcomeCarousel"),
-      {
-        interval: false,
-        keyboard: false,
-      }
-    );
-
-    // Initialize start guide
-    initializeStartGuide();
-
-    // Store that user has visited
-    localStorage.setItem("hasVisited", "true");
-  }
-});
 
 document.addEventListener("DOMContentLoaded", () => {
   // Add modal HTML to the document body
@@ -231,13 +213,37 @@ document.body.insertAdjacentHTML(
 `
 );
 
+// Ganti dengan implementasi yang benar
 document.addEventListener("DOMContentLoaded", () => {
-  // Get DOM elements
+  // Initialize modals
+  noSafetyNetModal = new bootstrap.Modal(
+    document.getElementById("noSafetyNetModal")
+  );
+  expenseModal = new bootstrap.Modal(document.getElementById("expenseModal"));
+
+  // Get the add expense button
   const addExpenseBtn = document.querySelector("button:has(.bi-dash-circle)");
 
-  // Add expense button click handler
+  // Add click handler
   addExpenseBtn.addEventListener("click", () => {
-    expenseModal.show();
+    const currentSafetyNet =
+      parseFloat(localStorage.getItem("totalSafetyNet")) || 0;
+
+    if (currentSafetyNet <= 0) {
+      // Only show no safety net modal
+      noSafetyNetModal.show();
+    } else {
+      // Show expense modal directly
+      expenseModal.show();
+    }
+  });
+
+  // Handle eat savings button click
+  document.getElementById("eatSavingsBtn").addEventListener("click", () => {
+    noSafetyNetModal.hide();
+    setTimeout(() => {
+      expenseModal.show();
+    }, 400); // Wait for modal transition
   });
 });
 
@@ -383,31 +389,6 @@ function addExpenseToHistory(amount, reason, category) {
   }
 }
 
-// Modify the updateSafetyNetDisplay function to also update savings
-function updateSafetyNetDisplay() {
-  const safetyNetAmount = (totalIncome * safetyNetPercentage) / 100;
-  const safetyNetDisplay = document.querySelector(
-    ".finance-item:first-child .finance-amount"
-  );
-  if (safetyNetDisplay) {
-    safetyNetDisplay.textContent = formatCurrency(safetyNetAmount);
-  }
-  // Update savings whenever safety net is updated
-  updateSavingsDisplay();
-}
-
-// Add this function after updateSafetyNetDisplay function
-function updateSavingsDisplay() {
-  const savingsPercentage = 100 - safetyNetPercentage;
-  const savingsAmount = (totalIncome * savingsPercentage) / 100;
-  const savingsDisplay = document.querySelector(
-    ".finance-item:nth-child(2) .finance-amount"
-  );
-  if (savingsDisplay) {
-    savingsDisplay.textContent = formatCurrency(savingsAmount);
-  }
-}
-
 // Add this function to calculate and update safety net
 function updateSafetyNetDisplay() {
   const safetyNetAmount = (totalIncome * safetyNetPercentage) / 100;
@@ -417,8 +398,6 @@ function updateSafetyNetDisplay() {
   if (safetyNetDisplay) {
     safetyNetDisplay.textContent = formatCurrency(safetyNetAmount);
   }
-  // Update savings whenever safety net is updated
-  updateSavingsDisplay();
 }
 
 // Modify the DOMContentLoaded event listener to include initial savings update
@@ -437,6 +416,40 @@ document.addEventListener("DOMContentLoaded", () => {
     helpGuideModal.show();
   });
 
+  // Initialize financial settings modal
+  const safetyNetSettings = document.getElementById("safetyNetSettings");
+  if (safetyNetSettings) {
+    const financialModal = new bootstrap.Modal(
+      document.getElementById("financialSettingsModal")
+    );
+
+    safetyNetSettings.addEventListener("click", () => {
+      // Set current value in input
+      const currentPercent =
+        parseFloat(localStorage.getItem("safetyNetPercentage")) || 20;
+      document.getElementById("safetyNetPercent").value = currentPercent;
+      financialModal.show();
+    });
+  }
+
+  // Add save settings handler
+  const saveSettingsBtn = document.getElementById("saveSafetyNetSettings");
+  if (saveSettingsBtn) {
+    saveSettingsBtn.addEventListener("click", () => {
+      const newPercent = parseFloat(
+        document.getElementById("safetyNetPercent").value
+      );
+      if (!isNaN(newPercent) && newPercent >= 0 && newPercent <= 100) {
+        localStorage.setItem("safetyNetPercentage", newPercent.toString());
+        safetyNetPercentage = newPercent;
+        updateDisplays();
+        bootstrap.Modal.getInstance(
+          document.getElementById("financialSettingsModal")
+        ).hide();
+      }
+    });
+  }
+
   // Modify the income form submit handler
   incomeForm.addEventListener("submit", (e) => {
     // Update displays
@@ -454,55 +467,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// Add these helper functions
-function updateDisplays() {
-  const totalIncomeDisplay = document.querySelector(
-    ".finance-item:nth-child(3) .finance-amount"
-  );
-  const safetyNetDisplay = document.querySelector(
-    ".finance-item:first-child .finance-amount"
-  );
-  const savingsDisplay = document.querySelector(
-    ".finance-item:nth-child(2) .finance-amount"
-  );
-
-  if (totalIncomeDisplay) {
-    // Remove existing animation classes
-    totalIncomeDisplay.classList.remove("animate-count-up");
-    safetyNetDisplay.classList.remove("animate-flash-fade");
-    savingsDisplay.classList.remove("animate-flash-fade");
-
-    // Force reflow
-    void totalIncomeDisplay.offsetWidth;
-    void safetyNetDisplay.offsetWidth;
-    void savingsDisplay.offsetWidth;
-
-    // Get previous values
-    const prevIncome =
-      parseFloat(totalIncomeDisplay.textContent.replace(/[^0-9.-]+/g, "")) || 0;
-
-    // Calculate new values
-    const safetyNetAmount = (totalIncome * safetyNetPercentage) / 100;
-    const savingsAmount = totalIncome - safetyNetAmount;
-
-    // Start animations
-    // Total Income animation
-    animateValue(totalIncomeDisplay, prevIncome, totalIncome, 500);
-
-    // Savings animation (after income)
-    setTimeout(() => {
-      savingsDisplay.textContent = formatCurrency(savingsAmount);
-      savingsDisplay.classList.add("animate-flash-fade");
-    }, 500);
-
-    // Safety Net animation (after savings)
-    setTimeout(() => {
-      safetyNetDisplay.textContent = formatCurrency(safetyNetAmount);
-      safetyNetDisplay.classList.add("animate-flash-fade");
-    }, 800);
-  }
-}
-
 // In income.js, update the handleIncomeSubmit function:
 function handleIncomeSubmit(e) {
   e.preventDefault();
@@ -510,132 +474,30 @@ function handleIncomeSubmit(e) {
   const amount = parseFloat(document.getElementById("incomeAmount").value);
   if (!amount || isNaN(amount)) return;
 
-  const prevTotal = totalIncome;
+  // Hitung safety net baru
+  const safetyNetAmount = calculateSafetyNet();
+  
+  // Update totals
   totalIncome += amount;
-
-  // Create transaction
-  const transaction = {
-    type: "income",
-    amount: amount,
-    date: new Date().toISOString(),
-  };
-
-  // Add to transactions array and save
-  transactions.unshift(transaction);
+  totalSafetyNet = safetyNetAmount;
+  totalSavings = totalIncome - safetyNetAmount;
+  
+  // Simpan ke localStorage
   localStorage.setItem("totalIncome", totalIncome.toString());
-  localStorage.setItem("transactions", JSON.stringify(transactions));
+  localStorage.setItem("totalSafetyNet", totalSafetyNet.toString());
+  localStorage.setItem("totalSavings", totalSavings.toString());
 
-  // Close modal first
-  incomeModal.hide();
+  // Dispatch event untuk update
+  window.dispatchEvent(new CustomEvent("safetyNetUpdated", {
+      detail: {
+          safetyNet: totalSafetyNet
+      }
+  }));
 
-  // Wait for modal transition to complete
-  setTimeout(() => {
-    // Get all display elements
-    const totalIncomeDisplay = document.querySelector(
-      ".finance-item:nth-child(3) .finance-amount"
-    );
-    const safetyNetDisplay = document.querySelector(
-      ".finance-item:first-child .finance-amount"
-    );
-    const savingsDisplay = document.querySelector(
-      ".finance-item:nth-child(2) .finance-amount"
-    );
-
-    // Calculate new values
-    const safetyNetAmount = (totalIncome * safetyNetPercentage) / 100;
-    const savingsAmount = totalIncome - safetyNetAmount;
-
-    // Start animations in sequence
-    // 1. Animate Total Income
-    animateValue(totalIncomeDisplay, prevTotal, totalIncome);
-
-    // 2. Animate Savings after income (with delay)
-    setTimeout(() => {
-      animateFlashFade(savingsDisplay, savingsAmount, 0);
-    }, 200);
-
-    // 3. Animate Safety Net last
-    setTimeout(() => {
-      animateFlashFade(safetyNetDisplay, safetyNetAmount, 0);
-    }, 400);
-
-    // Add transaction to history
-    addTransactionToHistory(transaction);
-  }, 300);
-
-  // Reset form
-  incomeForm.reset();
-}
-
-function handleExpenseSubmit(e) {
-  e.preventDefault();
-
-  const amount = parseFloat(document.getElementById("expenseAmount").value);
-  const reason = document.getElementById("expenseReason").value;
-  const category = document.querySelector(
-    'input[name="category"]:checked'
-  ).value;
-
-  if (!amount || isNaN(amount)) return;
-
-  const prevTotal = totalIncome;
-  totalIncome -= amount;
-
-  // Create transaction
-  const transaction = {
-    type: "expense",
-    amount: amount,
-    reason: reason,
-    category: category,
-    date: new Date().toISOString(),
-  };
-
-  // Save to localStorage
-  localStorage.setItem("totalIncome", totalIncome.toString());
-  transactions.unshift(transaction);
-  localStorage.setItem("transactions", JSON.stringify(transactions));
-
-  // Close modal first
-  expenseModal.hide();
-
-  // Wait for modal transition
-  setTimeout(() => {
-    // Trigger animations
-    const totalIncomeDisplay = document.querySelector(
-      ".finance-item:nth-child(3) .finance-amount"
-    );
-    const safetyNetDisplay = document.querySelector(
-      ".finance-item:first-child .finance-amount"
-    );
-    const savingsDisplay = document.querySelector(
-      ".finance-item:nth-child(2) .finance-amount"
-    );
-
-    // Calculate new values
-    const safetyNetAmount = (totalIncome * safetyNetPercentage) / 100;
-    const savingsAmount = totalIncome - safetyNetAmount;
-
-    // Animate Total Income
-    animateValue(totalIncomeDisplay, prevTotal, totalIncome);
-
-    // Animate Savings after income
-    setTimeout(() => {
-      savingsDisplay.classList.add("animate-flash-fade");
-      savingsDisplay.textContent = formatCurrency(savingsAmount);
-    }, 200);
-
-    // Animate Safety Net last
-    setTimeout(() => {
-      safetyNetDisplay.classList.add("animate-flash-fade");
-      safetyNetDisplay.textContent = formatCurrency(safetyNetAmount);
-    }, 400);
-
-    // Add to expense history
-    addExpenseToHistory(amount, reason, category);
-  }, 300);
-
-  // Reset form
-  expenseForm.reset();
+  // Update displays
+  updateAllSafetyNetDisplays();
+  
+  // ...sisa kode
 }
 
 // Welcome Modal Logic
@@ -662,6 +524,15 @@ document.addEventListener("DOMContentLoaded", () => {
     // Store that user has visited
     localStorage.setItem("hasVisited", "true");
   }
+
+  // const safetyNetSettings = document.getElementById("safetyNetSettings");
+  // const financialModal = new bootstrap.Modal(
+  //   document.getElementById("financialSettingsModal")
+  // );
+
+  // safetyNetSettings.addEventListener("click", () => {
+  //   financialModal.show();
+  // });
 });
 
 // Function to move to next slide
@@ -847,4 +718,199 @@ function createTooltip(title, description, targetElement) {
   setTimeout(() => tooltip.classList.add("show"), 100);
 
   return tooltip;
+}
+
+// Add at the top with other initializations
+let isManuallyAdjusted = localStorage.getItem("isManuallyAdjusted") === "true";
+
+// Update handleIncomeSubmit function
+function handleIncomeSubmit(e) {
+  e.preventDefault();
+
+  const amount = parseFloat(document.getElementById("incomeAmount").value);
+  if (!amount || isNaN(amount)) return;
+
+  // Calculate new income distribution
+  const safetyNetAmount = (amount * safetyNetPercentage) / 100;
+  const savingsAmount = amount - safetyNetAmount;
+
+  // Update totals
+  totalIncome += amount;
+  totalSafetyNet += safetyNetAmount;
+  totalSavings += savingsAmount;
+
+  // Save to localStorage
+  localStorage.setItem("totalIncome", totalIncome.toString());
+  localStorage.setItem("totalSafetyNet", totalSafetyNet.toString());
+  localStorage.setItem("totalSavings", totalSavings.toString());
+
+  // Dispatch custom event for safety net change
+  window.dispatchEvent(
+    new CustomEvent("safetyNetUpdated", {
+      detail: {
+        safetyNet: totalSafetyNet,
+      },
+    })
+  );
+
+  // Create transaction
+  const transaction = {
+    type: "income",
+    amount: amount,
+    safetyNet: safetyNetAmount,
+    savings: savingsAmount,
+    date: new Date().toISOString(),
+  };
+
+  transactions.unshift(transaction);
+  localStorage.setItem("transactions", JSON.stringify(transactions));
+
+  // Close modal and update displays
+  incomeModal.hide();
+  setTimeout(() => updateDisplays(), 300);
+
+  // Reset form
+  incomeForm.reset();
+}
+
+// Update updateDisplays function
+// Keep this single implementation of updateDisplays
+function updateDisplays() {
+  const totalIncomeDisplay = document.querySelector(
+    ".finance-item:nth-child(3) .finance-amount"
+  );
+  const safetyNetDisplay = document.querySelector(
+    ".finance-item:first-child .finance-amount"
+  );
+  const savingsDisplay = document.querySelector(
+    ".finance-item:nth-child(2) .finance-amount"
+  );
+
+  if (totalIncomeDisplay) {
+    const currentIncome = parseFloat(localStorage.getItem("totalIncome")) || 0;
+    const currentSafetyNet =
+      parseFloat(localStorage.getItem("totalSafetyNet")) || 0;
+    const currentSavings =
+      parseFloat(localStorage.getItem("totalSavings")) || 0;
+
+    animateValue(
+      totalIncomeDisplay,
+      parseFloat(totalIncomeDisplay.textContent.replace(/[^0-9]/g, "")),
+      currentIncome
+    );
+    animateValue(
+      safetyNetDisplay,
+      parseFloat(safetyNetDisplay.textContent.replace(/[^0-9]/g, "")),
+      currentSafetyNet
+    );
+    animateValue(
+      savingsDisplay,
+      parseFloat(savingsDisplay.textContent.replace(/[^0-9]/g, "")),
+      currentSavings
+    );
+  }
+}
+
+// Add with other modal initializations
+let noSafetyNetModal;
+
+// Replace the existing handleExpenseSubmit function with this one
+function handleExpenseSubmit(e) {
+  e.preventDefault();
+
+  const amount = parseFloat(document.getElementById("expenseAmount").value);
+  const reason = document.getElementById("expenseReason").value;
+  const category = document.querySelector(
+    'input[name="category"]:checked'
+  ).value;
+
+  if (!amount || isNaN(amount)) return;
+
+  // Get current values
+  let currentSafetyNet =
+    parseFloat(localStorage.getItem("totalSafetyNet")) || 0;
+  let currentSavings = parseFloat(localStorage.getItem("totalSavings")) || 0;
+  let currentIncome = parseFloat(localStorage.getItem("totalIncome")) || 0;
+
+  // Store original values for animation
+  const originalIncome = currentIncome;
+  const originalSavings = currentSavings;
+  const originalSafetyNet = currentSafetyNet;
+
+  // Handle expense reduction logic
+  if (currentSafetyNet <= 0) {
+    // When safety net is already 0, deduct from savings directly
+    currentSavings = Math.max(0, currentSavings - amount);
+    currentIncome = Math.max(0, currentIncome - amount);
+    // Keep safety net at 0
+    currentSafetyNet = 0;
+  } else if (amount <= currentSafetyNet) {
+    // If expense is less than or equal to safety net, only reduce safety net
+    currentSafetyNet = Math.max(0, currentSafetyNet - amount);
+    currentIncome = Math.max(0, currentIncome - amount);
+  } else {
+    // If expense is more than safety net, use up safety net and take remainder from savings
+    const remainingExpense = amount - currentSafetyNet;
+    currentSavings = Math.max(0, currentSavings - remainingExpense);
+    currentSafetyNet = 0;
+    currentIncome = Math.max(0, currentIncome - amount);
+  }
+
+  // Update global variables
+  totalIncome = currentIncome;
+  totalSavings = currentSavings;
+  totalSafetyNet = currentSafetyNet;
+
+  // Save to localStorage
+  localStorage.setItem("totalIncome", totalIncome.toString());
+  localStorage.setItem("totalSavings", totalSavings.toString());
+  localStorage.setItem("totalSafetyNet", totalSafetyNet.toString());
+
+  // Dispatch custom event for safety net change
+  window.dispatchEvent(
+    new CustomEvent("safetyNetUpdated", {
+      detail: {
+        safetyNet: currentSafetyNet,
+        savings: currentSavings,
+        income: currentIncome,
+      },
+    })
+  );
+
+  // Create transaction record
+  const transaction = {
+    type: "expense",
+    amount: amount,
+    reason: reason,
+    category: category,
+    date: new Date().toISOString(),
+    affectedSavings: currentSafetyNet === 0,
+  };
+
+  // Add to transactions history
+  transactions.unshift(transaction);
+  localStorage.setItem("transactions", JSON.stringify(transactions));
+
+  // Close modal and update displays
+  expenseModal.hide();
+  setTimeout(() => {
+    const totalIncomeDisplay = document.querySelector(
+      ".finance-item:nth-child(3) .finance-amount"
+    );
+    const safetyNetDisplay = document.querySelector(
+      ".finance-item:first-child .finance-amount"
+    );
+    const savingsDisplay = document.querySelector(
+      ".finance-item:nth-child(2) .finance-amount"
+    );
+
+    // Animate value changes
+    animateValue(totalIncomeDisplay, originalIncome, currentIncome);
+    animateValue(savingsDisplay, originalSavings, currentSavings);
+    animateValue(safetyNetDisplay, originalSafetyNet, currentSafetyNet);
+
+    addExpenseToHistory(amount, reason, category);
+  }, 300);
+
+  expenseForm.reset();
 }
